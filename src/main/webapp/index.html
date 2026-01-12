@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship Management</title>
+
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #007acc, #00bcd4);
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007acc;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .tab.active {
+            color: #007acc;
+            border-bottom: 3px solid #007acc;
+        }
+
+        .card {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .card.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            border-radius: 6px;
+            background: #007acc;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #005fa3;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🎓 Internship Management</h1>
+    <p class="subtitle">Application JEE – Gestion des étudiants, entreprises et stages</p>
+
+    <div class="tabs">
+        <div class="tab active" onclick="openTab(0)">Étudiant</div>
+        <div class="tab" onclick="openTab(1)">Entreprise</div>
+        <div class="tab" onclick="openTab(2)">Stage</div>
+    </div>
+
+    <!-- ÉTUDIANT -->
+    <div class="card active">
+        <label>Prénom</label>
+        <input id="sfname">
+        <label>Nom</label>
+        <input id="slname">
+        <label>Email</label>
+        <input id="semail">
+        <label>Promotion</label>
+        <input id="spromo">
+        <button onclick="createStudent()">Créer Étudiant</button>
+    </div>
+
+    <!-- ENTREPRISE -->
+    <div class="card">
+        <label>Nom</label>
+        <input id="cname">
+        <label>Secteur</label>
+        <input id="csector">
+        <label>Ville</label>
+        <input id="ccity">
+        <button onclick="createCompany()">Créer Entreprise</button>
+    </div>
+
+    <!-- STAGE -->
+    <div class="card">
+        <label>ID Étudiant</label>
+        <input id="sid">
+        <label>ID Entreprise</label>
+        <input id="cid">
+        <label>Titre</label>
+        <input id="ititle">
+        <label>Date début</label>
+        <input type="date" id="istart">
+        <label>Date fin</label>
+        <input type="date" id="iend">
+        <label>Description</label>
+        <input id="idesc">
+        <button onclick="createInternship()">Créer Stage</button>
+    </div>
+
+    <div id="result" class="result"></div>
+
+    <footer>
+        API REST : <code>/internship-management/api</code>
+    </footer>
+</div>
+
+<script>
+    const baseUrl = "/internship-management/api";
+    const result = document.getElementById("result");
+
+    function openTab(index) {
+        document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("active", i===index));
+        document.querySelectorAll(".card").forEach((c,i)=>c.classList.toggle("active", i===index));
+        result.style.display = "none";
+    }
+
+    async function request(url, data) {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (!res.ok) throw json;
+        return json;
+    }
+
+    async function createStudent() {
+        try {
+            const s = await request(`${baseUrl}/students`, {
+                firstName: sfname.value,
+                lastName: slname.value,
+                email: semail.value,
+                promotion: spromo.value
+            });
+            show(`Étudiant créé (ID ${s.id})`, true);
+        } catch (e) {
+            show(JSON.stringify(e), false);
+        }
+    }
+
+    async function createCompany() {
+        try {
+            const c = await request(`${baseUrl}/companies`, {
+                name: cname.value,
+                sector: csector.value,
+                city: ccity.value
+            });
+            show(`Entreprise créée (ID ${c.id})`, true);
+        } catch (e) {
+            show(JSON.stringify(e), false);
+        }
+    }
+
+    async function createInternship() {
+        try {
+            const i = await request(
+                `${baseUrl}/internships?studentId=${sid.value}&companyId=${cid.value}`,
+                {
+                    title: ititle.value,
+                    startDate: istart.value,
+                    endDate: iend.value,
+                    description: idesc.value
+                }
+            );
+            show(`Stage créé (ID ${i.id})`, true);
+        } catch (e) {
+            show(JSON.stringify(e), false);
+        }
+    }
+
+    function show(msg, ok) {
+        result.className = "result " + (ok ? "success" : "error");
+        result.style.display = "block";
+        result.textContent = msg;
+    }
+</script>
+
+</body>
+</html>
